@@ -227,7 +227,7 @@ program lump_driver
   endif
 
 
-  31 FORMAT(I4.4, 3(1x,I2.2),14(F15.7))
+  31 FORMAT(I4.4, 3(1x,I2.2),16(F15.7))
 
   !output file open
   open(unit=45,FILE=trim(model_out),FORM='formatted')
@@ -235,16 +235,16 @@ program lump_driver
 
   !write out
   !print header first
-  write(unit=45,*) 'year month day hour swe pcp pcp*scf raim pet tair mod_flow obs_flow uztwc uzfwc lztwc lzfsc lzfpc adimc'
+  write(unit=45,*) 'year month day hour swe pcp pcp*scf raim et pet tair uztwc uzfwc lztwc lzfsc lzfpc adimc mod_flow_unrouted mod_flow_routed obs_flow'
   do i = 1,sim_length
     if(unit_shape .gt. 0) then
-      write(unit=45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,&
-			raim(i),pet(i),tair(i),route_tci(i),streamflow(i), &
-			uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),adimc_dp(i)
+      write(unit=45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
+                        eta(i),pet(i),tair(i),uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),&
+                        adimc_dp(i),tci(i),route_tci(i),streamflow(i)
     else
-      write(unit=45,31) year(i),month(i),day(i),hour(i),sneqv(i)*1000.,precip(i),precip(i)*scf,&
-			raim(i),pet(i),tair(i),tci(i),streamflow(i), &
-			uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),adimc_dp(i)
+      write(unit=45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
+                        eta(i),pet(i),tair(i),uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),&
+                        adimc_dp(i),tci(i),route_tci(i),streamflow(i)
     endif
   enddo
   close(unit=45)
