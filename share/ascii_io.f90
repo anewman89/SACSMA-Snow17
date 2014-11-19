@@ -1,221 +1,95 @@
-subroutine read_init_params
+subroutine get_sim_length(sim_length)
   use nrtype
-  use snow17_sac
+  use snow17_sac, only: forcing_name, start_year,start_day,start_month, &
+                        end_year,end_month,end_day
 
-  implicit none
+  !output variables
+  integer(I4B),intent(out)	:: sim_length
 
   !local variables
-  real(dp)		:: dum_flt
-  integer(I4B)		:: h,n
-  integer(I4B)		:: dum_int
-  integer(I4B)		:: num_rows
-  character(len=1024)	:: dum_char
-  character(len=20)	:: band_num
-
-  !code
-  
-
-
-  !read data
-  do h = 1,num_hru
-    write(band_num,*) h
-    dum_char = trim(init_param_name)//adjustl(band_num)
-    open(UNIT=34,file=trim(dum_char),status='old')
-!print *,trim(dum_char)
-    !read header line off file
-    read(UNIT=34,*) num_rows
-!     print *,'ROWS: ',num_rows
-    do n = 1,num_rows
-	read(UNIT=34,*) init_params(h,n)
-!        print *,'init: ',init_params(h,n)
-    enddo
-    close(unit=34)
-  enddo
-
-end subroutine read_init_params
-
-subroutine get_model_state(cal_uztwc, cal_uzfwc, cal_lztwc, &
-                           cal_lzfsc, cal_lzfpc, cal_adimc)
-
-  use nrtype
-  use snow17_sac, only: model_out, sim_length
-
-  implicit none
-
-!output variables
-  real(dp),intent(out)	:: cal_uztwc, cal_uzfwc, cal_lztwc  !sac model state variables
-  real(dp),intent(out)	:: cal_lzfsc, cal_lzfpc, cal_adimc
-
-!local variables
-  integer(I4B)		:: i,dum_int
-
-  real(dp)		:: dum_flt
-
-  character(len = 1024)	:: pt_1, pt_2  !file name character arrays
-
-
-!code
-
-  30 FORMAT(I4.4, 3(1x,I2.2),7(F15.7))
-
-  pt_1 = model_out
-  pt_2 = '.model_state'
-  pt_1 = trim(pt_1)//trim(pt_2)
-
-
-  open(UNIT=88,file=pt_1,form='formatted')
-  
-  do i = 1,sim_length
-    read(UNIT=88,30) dum_int,dum_int,dum_int,dum_int, &
-                     cal_uztwc,cal_uzfwc,cal_lztwc,cal_lzfsc, &
-                     cal_lzfpc,cal_adimc,dum_flt
-
-  enddo
-  
-  close(UNIT=88)
-
-
-  return
-end subroutine get_model_state
-
-!ccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-subroutine get_start_points(obs_offset,obs_val_offset,forcing_offset,forcing_val_offset,val_length)
-  use nrtype
-  use snow17_sac, only: stream_name, start_month, start_day, sim_length
-  use gauge_calib, only: julianday_scalar
-
-  implicit none
- 
-!output variables
-  integer(I4B),	intent(out)	:: obs_offset			!offset from start of obs file (in days) to correct starting point for calibration
-  integer(I4B), intent(out)	:: forcing_offset		!offset from start of forcing data file (in days) to starting point for calibration
-  integer(I4B),	intent(out)	:: obs_val_offset		!offset from start of obs file (in days) to correct starting point for validation
-  integer(I4B), intent(out)	:: forcing_val_offset		!offset from start of forcing data file (in days) to starting point for validation
-  integer(I4B), intent(out)	:: val_length			!length of validation period in observed file based on calibration period ending point
-
-!local variables
-!this subroutine assumes streamflow is daily data of the following format:
-  character(len=64), parameter :: read_format = "(I8.8,1x,I4.4, 2(1x,I2.2),1x,1(F8.2))"
-
-  integer(I4B)	:: cnt			!counter variable for reading through observed streamflow record
-  integer(I4B)	:: gauge		!gauge id of current line read in
-  integer(I4B)	:: yr			!year of current line read in
-  integer(I4B)  :: obs_yr		!year of obs start point for calibration
-  integer(I4B)	:: mn			!month of current line read in
-  integer(I4B)	:: dy			!day of current line read in
-  integer(I4B)	:: jday_obs		!day of year variable
-  integer(I4B)	:: tmp_jday		!day of year variable
-  integer(I4B)	:: i			!counter variable
-  integer(I4B)	:: forcing_year		!year that forcing data record starts
-  integer(I4B)	:: dum_int
-  integer(I4B)	:: obs_length		!length of entire observed record
-  integer(I4B)  :: ios			!end of file integer
-
-  real(dp)	:: dum_real		!place holder real value
-  
-
-!code
-  obs_offset = 0
-  obs_val_offset = 0
-  forcing_offset = 0
-  forcing_val_offset = 0
-
-  forcing_year = 1980
-
-
-!open streamflow file
-  open (UNIT=50,file=stream_name,form='formatted',status='old')
-
-
-!want to find the first time we hit some date that is user specified
-!in observed streamflow data
-
-  cnt = 0
-  do
-    read (UNIT=50,FMT=read_format) gauge,yr,mn,dy,dum_real
-    cnt = cnt + 1
-    !if we are at the start_month,start_day for calibration, keep the record number
-    if(mn .eq. start_month .and. dy .eq. start_day) then
-      obs_offset = cnt
-      obs_yr     = yr
-      exit
-    endif
-  enddo
-  close(unit=50)
-!this gets the doy for the user specifed start date in the year that it occurs
-!in the observed record
-  call julianday_scalar(obs_yr,start_month,start_day,jday_obs)
-
-
-!now read entire file quick and keep length of file
-  open (UNIT=50,file=stream_name,form='formatted',status='old')
-  cnt = 0
-  ios = 0
-
-  do while(ios .ge. 0)
-    cnt = cnt + 1
-    read (UNIT=50,FMT=read_format,IOSTAT=ios) dum_int,dum_int,dum_int,dum_int,dum_real
-  enddo
-  obs_length = cnt
-
-  close(unit=50)
-
-!calculate how many days that is from jan 1 1980 
-!this is the offset in the daymet forcing data to match the start
-!of the streamflow record
-!loop through the years from 1980 to yr-1
-  do i = forcing_year,obs_yr-1,1
-    call julianday_scalar(i,12,31,tmp_jday)
-    forcing_offset = forcing_offset + tmp_jday
-  enddo
-!add partial year 
-  forcing_offset = forcing_offset + jday_obs
-
-
-!validation period offsets are calibration offset + sim_length
-  obs_val_offset = obs_offset + sim_length - 1
-  forcing_val_offset = forcing_offset + sim_length
-
-!also want to calculate validation length based off of observed record & calibration specifications
-  val_length = obs_length - obs_val_offset - 2
-
-  print *,'get_start_pts:',obs_length,forcing_offset,obs_offset,obs_val_offset,forcing_val_offset,val_length
-
-  return
-end subroutine get_start_points
-
-!ccccccccccccccccccccccccccccccccc
-
-subroutine read_cida_areal_forcing(forcing_offset,forcing_val_offset,val_length)
-  use nrtype
-  use constants,  only: cfs_cms, sec_day
-  use snow17_sac, only: forcing_name, sim_length, lat, elev, area_basin, &
-                        year, month, day, hour, dayl, precip, swdown, &
-                        tmax, tmin, tair, vpd, streamflow, mean_obs, &
-			val_period
-
-  implicit none
-
-!input variables
-  integer(I4B), intent(in)		:: forcing_offset  !offset for forcing file to get to start of calibration period matching observed record
-  integer(I4B), intent(in)		:: forcing_val_offset !offset for focing file to get to start of validation period matching observed record
-  integer(I4B), intent(in)		:: val_length		!length of validation period
-
-!local variables
-  integer(I4B)				:: i,jday_s,wy_jday,dum_int,i2,end_pt
-  integer(I4B)				:: num_valid
+  integer(I4B)			:: ios
+  integer(I4B)			:: dum_int
+  integer(I4B)			:: year,month,day
+  integer(I4B)			:: read_flag
 
   character(len=64), parameter		:: read_format = "(I4.4, 3(1x,I2.2),1x,7(F10.2))"
   character(len = 1024)			:: dum_str
-  real(DP),dimension(36500)		:: swe
+  real(dp)		:: dum_real
+
+  
+
+!code
+  read_flag = 0
+  sim_length = 0
+
+  open (UNIT=50,file=trim(forcing_name),form='formatted',status='old')
+
+  read (UNIT=50,FMT='(F7.2)') dum_real
+  read (UNIT=50,FMT='(F7.2)') dum_real
+  read (UNIT=50,FMT='(F11.0)') dum_real
+  read (UNIT=50,FMT='(80A)') dum_str
+
+
+  do while(ios .ge. 0)
+    read (UNIT=50,FMT=read_format,IOSTAT=ios) year,month,day,dum_int,&
+				dum_real,dum_real,dum_real,dum_real,dum_real,&
+				dum_real,dum_real
+
+    if(year .eq. start_year .and. month .eq. start_month .and. day .eq. start_day) then
+      read_flag = 1
+    end if
+
+    if(read_flag .eq. 1) then
+      sim_length = sim_length + 1
+    end if
+
+    if(year .eq. end_year .and. month .eq. end_month .and. day .eq. end_day) then
+      read_flag = 0
+    end if
+  end do
+
+  close(unit=50)
+
+end subroutine get_sim_length
+
+!ccccccccccccccccccccccccccccccc
+
+subroutine read_areal_forcing(year,month,day,hour,tmin,tmax,vpd,dayl,swdown,precip)
+  use nrtype
+  use snow17_sac, only: forcing_name, start_year,start_day,start_month, &
+                        end_year,end_month,end_day,lat,area_basin,elev
+
+  implicit none
+
+!output variables
+  integer(I4B),dimension(:),intent(out)	:: year
+  integer(I4B),dimension(:),intent(out)	:: month
+  integer(I4B),dimension(:),intent(out)	:: day
+  integer(I4B),dimension(:),intent(out)	:: hour
+  real(dp),dimension(:),intent(out)	:: tmin
+  real(dp),dimension(:),intent(out)	:: tmax
+  real(dp),dimension(:),intent(out)	:: vpd
+  real(dp),dimension(:),intent(out)	:: dayl
+  real(dp),dimension(:),intent(out)	:: swdown
+  real(dp),dimension(:),intent(out)	:: precip
+
+!local variables
+  integer(I4B)				:: i,ios
+  integer(I4B)				:: yr,mnth,dy,hr
+  integer(I4B)				:: read_flag
+
+  character(len=64), parameter		:: read_format = "(I4.4, 3(1x,I2.2),1x,7(F10.2))"
+  character(len = 1024)			:: dum_str
+  real(DP)				:: swe
   real(DP)				:: dum_real
-  real(DP)				:: sum_obs
+
+  real(DP)				:: dl,pcp,sw,tma,tmn,vp
+
+
 
 
 !code
-  sum_obs = 0.0
-  num_valid = 0
+  i = 1
 !read met file
   open (UNIT=50,file=trim(forcing_name),form='formatted',status='old')
 
@@ -230,32 +104,85 @@ subroutine read_cida_areal_forcing(forcing_offset,forcing_val_offset,val_length)
   !need to do this because forcing starts 01 Jan 1980
   !observed streamflow varies in its start date by gauge
 
-  if(val_period .eq. 0) then
-    print *,'in cida',forcing_offset,sim_length,forcing_offset+sim_length
+  do while(ios .ge. 0)
+    read (UNIT=50,FMT=read_format,IOSTAT=ios) yr,mnth,dy,hr,&
+			    dl,pcp,sw,swe,tma,&
+			    tmn,vp
 
-    i2 = 0
-    do i = 1,(forcing_offset + sim_length)
-      !if we are at or past the forcing offset date, keep data
-      if(i .ge. forcing_offset) then
- 	i2 = i2 + 1
-!	read (UNIT=50,FMT=read_format) year(i2),month(i2),day(i2),hour(i2),&
-!				      dayl(i2),precip(i2),swdown(i2),swe(i2),tmax(i2),tmin(i2),vpd(i2)
-	read (UNIT=50,FMT=*) year(i2),month(i2),day(i2),hour(i2),&
-				      dayl(i2),precip(i2),swdown(i2),swe(i2),tmax(i2),tmin(i2),vpd(i2)
+    if(yr .eq. start_year .and. mnth .eq. start_month .and. dy .eq. start_day) then
+      read_flag = 1
+    end if
 
-      !need to compute tair too
-	tair(i2) = ((tmax(i2)+tmin(i2))/2.0_dp)
-      else
-      !read in but don't keep
-!	read (UNIT=50,FMT=read_format) dum_int,dum_int,dum_int,dum_int,&
-!				       dum_real,dum_real,dum_real,dum_real,dum_real,dum_real,dum_real
-	read (UNIT=50,FMT=*) dum_int,dum_int,dum_int,dum_int,&
-				       dum_real,dum_real,dum_real,dum_real,dum_real,dum_real,dum_real
+    if(read_flag .eq. 1) then
+      year(i)	= yr
+      month(i)	= mnth
+      day(i)	= dy
+      hour(i)	= hr
+      dayl(i)	= dl
+      precip(i)	= pcp
+      swdown(i) = sw
+      tmax(i)	= tma
+      tmin(i)	= tmn
+      vpd(i)	= vp
+      i = i + 1
 
-      endif
-    enddo
-    !need to convert streamflow to mm/day
-    do i = 1,sim_length
+    end if
+
+    if(yr .eq. end_year .and. mnth .eq. end_month .and. dy .eq. end_day) then
+      read_flag = 0
+    end if
+
+  end do
+
+  close(unit=50)
+
+  return
+
+end subroutine read_areal_forcing
+
+!cccccccccccccccccccccccccccccccccccccccccc
+!change & simplify
+subroutine read_streamflow(streamflow)
+  use nrtype
+  use constants, only: sec_day,cfs_cms
+  use snow17_sac, only: stream_name,area_basin,start_year,start_day,start_month, &
+			end_year,end_month,end_day
+
+  implicit none
+
+!output variables
+  real(dp),dimension(:),intent(out)	:: streamflow
+
+!local variables
+  integer(I4B) :: i
+  integer(I4B) :: yr,mn,dy,gauge,ios,error
+  real(dp)    :: flow
+
+  logical	:: valid
+
+!this subroutine assumes streamflow is daily data of the following format:
+  character(len=64), parameter :: read_format = "(I8.8,1x,I4.4, 2(1x,I2.2),1x,1(F8.2))"
+
+
+!code
+  valid = .false.
+  i = 1
+
+! open streamflow file
+  open (UNIT=50,file=stream_name,form='formatted',status='old')
+
+
+  do while(ios .ge. 0)
+    read (UNIT=50,FMT=read_format,IOSTAT=ios) gauge,yr,mn,dy,flow
+
+    if(yr .eq. start_year .and. mn .eq. start_month .and. dy .eq. start_day) then
+      valid = .true.
+    end if
+
+    if(valid) then
+      streamflow(i)	= flow
+
+      !convert flow to mm/day
       !convert streamflow (cfs) to cms
       streamflow(i) = streamflow(i)*cfs_cms  !now in cubic meters per second
 
@@ -265,286 +192,18 @@ subroutine read_cida_areal_forcing(forcing_offset,forcing_val_offset,val_length)
 
       !1 cubic meter per day is 1000 mm per square m -> mm*m^2/day
       streamflow(i) = streamflow(i)*1000./area_basin  !now in mm/day
-      if(streamflow(i) .ge. 0) then
-	sum_obs = sum_obs + streamflow(i)
-	num_valid = num_valid + 1
-      endif
-    enddo
-!    mean_obs = sum_obs/real(sim_length)
-    mean_obs = sum_obs/real(num_valid,kind(dp))
-  !print *,'mean: ',mean_obs
-!print *,'cida',year(1),month(1),day(1),precip(1),streamflow(1)
-  else
-  !validation grab
-    !print *,'val forcing grab',forcing_val_offset,val_length,forcing_offset+sim_length+val_length
-    i2 = 0
-    do i = 1,(forcing_val_offset + val_length)
-      if(i .ge. forcing_val_offset) then
-	i2 = i2 + 1
+      
+      i = i + 1
+    end if
 
-!	read (UNIT=50,FMT=read_format) year(i2),month(i2),day(i2),hour(i2),&
-!				      dayl(i2),precip(i2),swdown(i2),swe(i2),tmax(i2),tmin(i2),vpd(i2)\
-	read (UNIT=50,FMT=*) year(i2),month(i2),day(i2),hour(i2),&
-				      dayl(i2),precip(i2),swdown(i2),swe(i2),tmax(i2),tmin(i2),vpd(i2)
+    if(yr .eq. end_year .and. mn .eq. end_month .and. dy .eq. end_day) then
+      valid = .false.
+    end if
 
-  !print *,i
-      !need to compute tair too
-	tair(i2) = (tmax(i2)+tmin(i2))/2.0_dp
-      else
-!	read (UNIT=50,FMT=read_format) dum_int,dum_int,dum_int,dum_int,&
-!				    dum_real,dum_real,dum_real,dum_real,dum_real,dum_real,dum_real
-	read (UNIT=50,FMT=*) dum_int,dum_int,dum_int,dum_int,&
-				    dum_real,dum_real,dum_real,dum_real,dum_real,dum_real,dum_real
-      endif
-    enddo
+  end do
 
-  !need to convert streamflow to mm/day
-    do i = 1,val_length
-      !convert streamflow (cfs) to cms
-      streamflow(i) = streamflow(i)*cfs_cms  !now in cubic meters per second
-
-      !need to convert to mm/day too
-      streamflow(i) = streamflow(i)*sec_day !now in cubic meters per day m^3 day^-1
-
-      !1 cubic meter per day is 1000 mm per square m
-      streamflow(i) = streamflow(i)*1000./area_basin  !now in mm/day
-      if(streamflow(i) .ge. 0.0) then
-	sum_obs = sum_obs + streamflow(i)
-	num_valid = num_valid + 1
-      endif
-    enddo
-!    mean_obs = sum_obs/real(val_length)
-    mean_obs = sum_obs/real(num_valid,kind(dp))
-
-  !print *,'mean: ',mean_obs
-  endif
-  close(UNIT=50)
-
-print *,'cida start',year(1),month(1),day(1),precip(1),streamflow(1),mean_obs
-print *,'cida end',i2,year(i2),month(i2),day(i2),precip(i2),streamflow(i2)
+  close(unit=50)
 
   return
 
-end subroutine read_cida_areal_forcing
-
-subroutine read_fuse_raim(num_hru,forcing_offset,forcing_val_offset,val_length)
-  use nrtype
-  use snow17_sac, only: sim_length, val_period,fuse_raim
-  implicit none
-
-!input variables
-
-  integer(I4B), intent(in)		:: forcing_offset  !offset for forcing file to get to start of calibration period matching observed record
-  integer(I4B), intent(in)		:: forcing_val_offset !offset for focing file to get to start of validation period matching observed record
-  integer(I4B), intent(in)		:: val_length		!length of validation period
-  integer(I4B), intent(in)		:: num_hru
-
-!output variables
-!  real(dp),dimension(100,36500), intent(out)	:: raim
-
-
-!local variables
-  character(len=1024)		:: band_name       !name of file to read
-  character(len=200)		:: band_num        !number of band
-  character(len=512)		:: base
-  character(len=20)		:: suffix
-  integer(I4B)			:: i,i2,n
-  real(dp)			:: dum_real
-
-!code
-  base = '/d2/anewman/crystal_river/fuse_raim/ascii/fuse_raim_band_'
-  suffix = '.txt'
-
-  do n = 1020,num_hru+1020-1
-    write(band_num,*) n
-
-    band_name = trim(base)//trim(adjustl(band_num))//trim(suffix)
-    open (UNIT=51,file=band_name,form='formatted',status='old')
-
-    if(val_period .eq. 0) then
-      i2 = 0
-      do i = 1,(forcing_offset + sim_length)
-
-	!if we are at or past the forcing offset date, keep data
-	if(i .ge. forcing_offset) then
-	  i2 = i2 + 1
-	  read(UNIT=51,FMT="(F7.2)") fuse_raim(n-1019,i2)
-        else
-	  read(UNIT=51,FMT="(F7.2)") dum_real
-        endif
-  if(i .eq. 286) then
-    print *,'raim: ',fuse_raim(n-1019,i2),i2
-  endif
-      enddo
-    else
-      i2 = 0
-      do i = 1,(forcing_val_offset + val_length)
-
-	if(i .ge. forcing_val_offset) then
-	  i2 = i2 + 1
-    	  read(UNIT=51,FMT="(F7.2)") fuse_raim(n-1019,i2)
-        else
-	  read(UNIT=51,FMT="(F7.2)") dum_real
-        endif
-
-      enddo
-    endif
-
-    close(unit=51)
-
-  enddo !end hru loop
-
-end subroutine read_fuse_raim
-
-!cccccccccccccccccccccccccccccccccccccccccc
-
-subroutine read_streamflow(obs_offset,obs_val_offset,val_length)
-  use nrtype
-  use snow17_sac, only: stream_name, sim_length, streamflow, val_period, &
-                        area_basin,valid
-  implicit none
-
-!input variables
-  integer(I4B), intent(in)	:: obs_offset
-  integer(I4B), intent(in)	:: obs_val_offset
-  integer(I4B), intent(in)	:: val_length
-
-!local variables
-  integer(I4B) :: i,i2,end_pt,dum_int,jday_s,wy_jday
-  integer(I4B) :: yr,mn,dy,gauge,cnt,ios,error
-  real(dp)    :: dum_real,st_1
-
-!this subroutine assumes streamflow is daily data of the following format:
-  character(len=64), parameter :: read_format = "(I8.8,1x,I4.4, 2(1x,I2.2),1x,1(F8.2))"
-
-
-!code
-  valid = .false.
-
-! open streamflow file
-  open (UNIT=50,file=stream_name,form='formatted',status='old')
-
-  !read in for calibration period
-  if(val_period .eq. 0) then
-    i2 = 0
-    do i = 1,obs_offset+sim_length
-      !if withint time period, keep record
-      if(i .ge. obs_offset) then
-        i2 = i2 + 1
-
-	read (UNIT=50,FMT=read_format) gauge,yr,mn,dy,streamflow(i2)
-	if(streamflow(i2) .lt. -1.0_dp) then
-	  streamflow(i2) = -999.0_dp
-	else
-	  valid(i2) = .true.
-	endif
-
-	if(i2 .eq. 1) then
-	  print *,'streamflow calib: ',yr,mn,dy,streamflow(i2),i2,area_basin
-	endif
-
-      else
-      !don't store record
-	read (UNIT=50,FMT=read_format) dum_int,dum_int,dum_int,dum_int,dum_real
-      endif
-    enddo
-    print *,'obs',val_length,i2
-    print *,'obs end',yr,mn,dy,streamflow(i2)
-
-  !validation period
-  else
-  !now if val_period .ne. 0 read rest of file
-    cnt = 0
-    i2  = 0
-    ios = 0
-    do while(ios .ge. 0)
-      if(cnt .ge. obs_val_offset) then
-	i2 = i2 + 1
-	read (UNIT=50,FMT=read_format,IOSTAT=ios) gauge,yr,mn,dy,streamflow(i2)
-	if(streamflow(i2) .lt. -1.0_dp) then
-	  streamflow(i2) = -999.0_dp
-	else
-	  valid(i2) = .true.
-	endif
-
-	if(i2 .eq. 1) then
-	  print *,'streamflow val: ',yr,mn,dy,streamflow(i2),i2
-	endif
-      else
-      !don't keep record if not in correct time window
-	read (UNIT=50,FMT=read_format,IOSTAT=ios) dum_int,dum_int,dum_int,dum_int,dum_real
-      endif
-      cnt = cnt + 1
-    enddo
-    print *,'val obs end: ',yr,mn,dy,val_length,i2,streamflow(i2-1)
-  endif !end val_period if check
-
-
-  close(UNIT=50)
-
-  return
 end subroutine read_streamflow
-
-!ccccccccccccccccccccccccccccccccc
-!this version isn't setup to read in for validation period, only calibration period
-!this is likely an obsolte function at this point, schedule for removal ( AJN 9/9/2013 )
-subroutine read_mopex_forcing(forcing_offset)
-  use nrtype
-  use snow17_sac, only: forcing_name, sim_length, streamflow, &
-                        year, month, day, hour, precip, pet, &
-                        raim, sneqv_verif, tair, mean_obs,   &
-                        lat, elev
-  implicit none
-
-!input variables
-  integer(I4B), intent(in)		:: forcing_offset  !offset for forcing file to get to start of calibration period matching observed record
-
-!local variables
-  integer(I4B)              :: i,dum_int,end_pt,i2
-  character(len=1000)  :: dum_string
-  real(dp)                 :: est_et,est_q,surf_q,grnd_q,soil_m
-  real(dp)                 :: sum_obs,dum_real
-
-  character(len=64), parameter :: read_format = "(I4.4, 3(3x,I2.2),11(F10.2))"
-
-!code
-  sum_obs = 0.0
-
-  end_pt = forcing_offset + sim_length
-
-  i2 = 0
-
-!read met file
-  open (UNIT=50,file=forcing_name,form='formatted',status='old')
-
-  read (UNIT=50,FMT="(A78)") dum_string
-  read (UNIT=50,FMT="(A23)") dum_string
-  read (UNIT=50,FMT="(A24)") dum_string
-  read (UNIT=50,FMT="(A70)") dum_string
-  read (UNIT=50,FMT="(A28)") dum_string
-  read (UNIT=50,FMT="(A36)") dum_string
-  read (UNIT=50,FMT="(A130)") dum_string
-  read (UNIT=50,FMT="(F4.0)") elev
-  read (UNIT=50,FMT="(F5.2)") lat 
-  do i = 1,forcing_offset+sim_length
-
-    if(i .ge. forcing_offset .and. i .lt. end_pt) then
-!      i2 = i-start_calib+1
-      i2 = i2 + 1
-      read (UNIT=50,FMT=read_format) year(i2),month(i2),day(i2),hour(i2),&
-      		                   precip(i2),est_et,pet(i2),est_q,streamflow(i2),surf_q,grnd_q, &
-                                   soil_m,raim(i2),sneqv_verif(i2),tair(i2)
-
-      sum_obs = sum_obs + streamflow(i2)
-    else
-      read (UNIT=50,FMT=read_format) dum_int,dum_int,dum_int,dum_int,&
-      		                   dum_real,dum_real,dum_real,dum_real,dum_real,dum_real,dum_real, &
-                                   dum_real,dum_real,dum_real,dum_real
-    endif
-  enddo
-  close(UNIT=50)
-  mean_obs = sum_obs/real(sim_length)
-
-!  print *,'read: ', year(1),month(1),day(1),hour(1),raim(1),streamflow(1)
-  return
-end subroutine read_mopex_forcing

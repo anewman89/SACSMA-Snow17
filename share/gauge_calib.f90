@@ -2,9 +2,16 @@ module gauge_calib
 
   interface 
 
-    subroutine julian_day
+    subroutine julian_day(year,month,day,jday)
       use nrtype
-      use snow17_sac, only: jday,year,month,day
+      !input variables
+      integer(I4B),dimension(:),intent(in) :: year
+      integer(I4B),dimension(:),intent(in) :: month
+      integer(I4B),dimension(:),intent(in) :: day
+
+      !output variables
+      integer(I4B),dimension(:),intent(out) :: jday
+
     end subroutine julian_day
 
 
@@ -18,25 +25,10 @@ module gauge_calib
       integer(I4B),intent(out) :: jday_scalar
     end subroutine julianday_scalar
 
-    subroutine read_init_params
-      use nrtype
-      use snow17_sac
-    end subroutine read_init_params
 
     subroutine read_namelist
       use nrtype
     end subroutine read_namelist
-
-
-    subroutine snow17_sacsma_eval(a, obj_val)
-      use nrtype
-      use constants, only: sec_day, sec_hour
-
-      real(sp), dimension(30), intent(inout):: a
-
-      real(dp), intent(out)		:: obj_val
-    end subroutine snow17_sacsma_eval
-
 
     subroutine spin_up_first_year(a, params_in,spinup_crit, in_tair,in_precip,in_pet, &
                                   in_raim,uztwc, uzfwc, lztwc, lzfsc, lzfpc, adimc)
@@ -64,187 +56,62 @@ module gauge_calib
     end subroutine sfc_pressure
 
 
-    subroutine calc_pet_pt(a)
+    subroutine calc_pet_pt(jday,tmax,tmin,tair,vpd,swdown,dayl,pet)
       use constants
       use nrtype
-      use snow17_sac, only: pet, tair, year, month, day, jday, &
-                        vpd, swdown, dayl, tmax, tmin, elev, lat
+      use snow17_sac, only: elev,lat,pet_coef
 
-      real(sp), intent(in), dimension(30) :: a
+      !input variable
+      integer(I4B), dimension(:), intent(in) 	:: jday
+      real(dp), dimension(:), intent(in) 	:: tair
+      real(dp), dimension(:), intent(in) 	:: tmax
+      real(dp), dimension(:), intent(in) 	:: tmin
+      real(dp), dimension(:), intent(in) 	:: vpd
+      real(dp), dimension(:), intent(in) 	:: swdown
+      real(dp), dimension(:), intent(in) 	:: dayl
+
+      !output variable
+      real(dp),dimension(:),intent(out)	:: pet
     end subroutine calc_pet_pt
 
-
-    subroutine sce_param_setup(a,bl,bu)
+    subroutine get_sim_length(sim_length)
       use nrtype
-      use snow17_sac, only: scf,mfmax,mfmin,uadj,si,pxtemp, &
-                        uztwm,uzfwm,lztwm,lzfpm,lzfsm,lzpk,lzsk, uzk, &
-                        zperc,rexp,pctim, pfree,unit_shape,unit_scale,pet_coef, &
-                        nmf,tipm,mbase,plwhc,daygm,adimp,riva,side,rserv
+      use snow17_sac, only: forcing_name, start_year,start_day,start_month, &
+                        end_year,end_month,end_day
 
-      real(sp), intent(out), dimension(30) :: a
-      real(sp), intent(out), dimension(30) :: bl
-      real(sp), intent(out), dimension(30) :: bu
-    end subroutine sce_param_setup
+      integer(I4B), intent(out)	:: sim_length	
+    end subroutine get_sim_length
 
 
-    subroutine get_start_points(obs_offset,obs_val_offset,forcing_offset,forcing_val_offset,val_length)
+    subroutine read_streamflow(streamflow)
       use nrtype
-      use snow17_sac, only: stream_name, start_month, start_day, sim_length
+      use constants,  only: cfs_cms, sec_day
+      use snow17_sac, only: stream_name,area_basin
 
-      integer(I4B), intent(out)	:: obs_offset			!offset from start of obs file (in days) to correct starting point for calibration
-      integer(I4B), intent(out)	:: forcing_offset		!offset from start of forcing data file (in days) to starting point for calibration
-      integer(I4B), intent(out)	:: obs_val_offset		!offset from start of obs file (in days) to correct starting point for validation
-      integer(I4B), intent(out)	:: forcing_val_offset		!offset from start of forcing data file (in days) to starting point for validation
-      integer(I4B), intent(out)	:: val_length			!length of validation period in observed file based on calibration period ending point
-    end subroutine get_start_points
-
-
-    subroutine read_streamflow(obs_offset,obs_val_offset,val_length)
-      use nrtype
-      use snow17_sac, only: stream_name, sim_length, streamflow, val_period, &
-                        area_basin
-
-      integer(I4B), intent(in)	:: obs_offset
-      integer(I4B), intent(in)	:: obs_val_offset
-      integer(I4B), intent(in)	:: val_length
+      !output variables
+      real(dp),dimension(:),intent(out)	:: streamflow
     end subroutine read_streamflow
 
 
-    subroutine read_cida_areal_forcing(forcing_offset,forcing_val_offset,val_length)
+    subroutine read_areal_forcing(year,month,day,hour,tmin,tmax,vpd,dayl,swdown,precip)
       use nrtype
-      use constants,  only: cfs_cms, sec_day
-      use snow17_sac, only: forcing_name, sim_length, lat, elev, area_basin, &
-                        year, month, day, hour, dayl, precip, swdown, &
-                        tmax, tmin, tair, vpd, streamflow, mean_obs, &
-			val_period
+      use snow17_sac, only: forcing_name, start_year,start_day,start_month, &
+                        end_year,end_month,end_day,lat,area_basin,elev
 
-      integer(I4B), intent(in)		:: forcing_offset  !offset for forcing file to get to start of calibration period matching observed record
-      integer(I4B), intent(in)		:: forcing_val_offset !offset for focing file to get to start of validation period matching observed record
-      integer(I4B), intent(in)		:: val_length		!length of validation period
-    end subroutine read_cida_areal_forcing
-
-
-    subroutine read_fuse_raim(num_hru,forcing_offset,forcing_val_offset,val_length)
-      use nrtype
-      use snow17_sac, only: sim_length, val_period
-
-      integer(I4B), intent(in)		:: forcing_offset  !offset for forcing file to get to start of calibration period matching observed record
-      integer(I4B), intent(in)		:: forcing_val_offset !offset for focing file to get to start of validation period matching observed record
-      integer(I4B), intent(in)		:: val_length		!length of validation period
-      integer(I4B), intent(in)		:: num_hru
-
-    end subroutine read_fuse_raim
-
-    subroutine get_model_state(cal_uztwc, cal_uzfwc, cal_lztwc, &
-                           cal_lzfsc, cal_lzfpc, cal_adimc)
-      use nrtype
-      use snow17_sac, only: model_out, sim_length
-
-      real(dp),intent(out)	:: cal_uztwc, cal_uzfwc, cal_lztwc  !sac model state variables
-      real(dp),intent(out)	:: cal_lzfsc, cal_lzfpc, cal_adimc
-    end subroutine get_model_state
+      !output variables
+      integer(I4B),dimension(:),intent(out)	:: year
+      integer(I4B),dimension(:),intent(out)	:: month
+      integer(I4B),dimension(:),intent(out)	:: day
+      integer(I4B),dimension(:),intent(out)	:: hour
+      real(dp),dimension(:),intent(out)	:: tmin
+      real(dp),dimension(:),intent(out)	:: tmax
+      real(dp),dimension(:),intent(out)	:: vpd
+      real(dp),dimension(:),intent(out)	:: dayl
+      real(dp),dimension(:),intent(out)	:: swdown
+      real(dp),dimension(:),intent(out)	:: precip    
+    end subroutine read_areal_forcing
 
 
-    subroutine calc_rmse(model, obs, length, valid,rmse)
-      use nrtype
-
-      real(dp), dimension(36500),     intent(in)  :: model
-      real(dp), dimension(36500),     intent(in)  :: obs
-      integer(I4B),	intent(in)		:: length
-      logical, dimension(36500), intent(in)	:: valid
-
-      real(dp),		  intent(out) :: rmse
-    end subroutine calc_rmse
-
-
-    subroutine calc_mse(model,obs,length, valid,mse)
-      use nrtype
-
-      real(dp), dimension(36500),     intent(in)  :: model
-      real(dp), dimension(36500),     intent(in)  :: obs
-      integer(I4B),	intent(in)		:: length
-      logical, dimension(36500), intent(in)	:: valid
-
-      real(dp),		  intent(out) :: mse
-    end subroutine calc_mse
-
-
-    subroutine calc_nse(model,obs,length, valid,nse)
-      use nrtype
-
-      real(dp), dimension(36500),     intent(in)  :: model
-      real(dp), dimension(36500),     intent(in)  :: obs
-      integer(I4B),	intent(in)		:: length
-      logical, dimension(36500), intent(in)	:: valid
-
-      real(dp),		  intent(out) :: nse
-    end subroutine calc_nse
-
-
-    subroutine calc_kge(model,obs,length, valid,kge)
-      use nrtype
-
-      real(dp), dimension(36500),     intent(in)  :: model
-      real(dp), dimension(36500),     intent(in)  :: obs
-      integer(I4B),	intent(in)		:: length
-      logical, dimension(36500), intent(in)	:: valid
-
-      real(dp),		  intent(out) :: kge
-    end subroutine calc_kge
-
-
-    subroutine pearson(model, obs, length,valid,corr)
-      use nrtype
-
-      real(dp), dimension(36500),intent(in)	:: model
-      real(dp), dimension(36500),intent(in)	:: obs
-      integer(I4B),	intent(in)			:: length
-      logical, dimension(36500), intent(in)	:: valid
-
-      real(dp),intent(out)		:: corr
-    end subroutine pearson
-
-
-    subroutine fdc_fms(model, obsfdc, length, valid, pbiasfms)
-      use nrtype
-      use nr, only: sort_heap
-
-      
-      real(DP), dimension(36500),     intent(in)  :: model	! Modeled streamflow
-      real(DP), dimension(36500),     intent(in)  :: obsfdc	! sorted observed streamflow
-      integer(I4B),	intent(in)			:: length
-      logical, dimension(36500),intent(in)		:: valid
-
-      
-      real(DP), intent(out) :: pbiasfms
-
-    end subroutine fdc_fms
-
-    subroutine fdc_fhvbias(model, obsfdc, length, valid, pbiasfhv)
-      use nrtype
-      use nr, only: sort_heap
-
-      
-      real(DP), dimension(36500),     intent(in)  :: model	! Modeled streamflow
-      real(DP), dimension(36500),     intent(in)  :: obsfdc	! sorted observed streamflow
-      integer(I4B),	intent(in)			:: length
-      logical, dimension(36500),intent(in)		:: valid
-
-      
-      real(DP), intent(out) :: pbiasfhv
-
-    end subroutine fdc_fhvbias
-
-    subroutine sortpick(vectorin,end_pt,vectorout,order)
-      use nrtype
-      
-      real(DP), dimension(36500), intent(in)	:: vectorin 	! input vector
-      integer(I4B)				:: end_pt	!length of input vector
-
-      real(DP), dimension(36500), intent(out)	:: vectorout 	! output vector
-      integer(I4B),dimension(36500),intent(out)	:: order 	! order of sorted vector (from initial input array)
-
-    end subroutine sortpick
 
   end interface
 

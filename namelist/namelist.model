@@ -1,0 +1,58 @@
+&INIT_CONTROL
+forcing_name  = "/d2/anewman/daymet_forcing/lump/14/009081600_lump_cida_forcing_leap.txt"
+stream_name  = "/d2/anewman/usgs_streamflow/14/009081600_streamflow_1980_leap.txt"
+model_out = "./test_model_output.txt"
+gage_id = 009081600
+dt            = 86400  !model time step in seconds (86400 = 1 day)
+start_year    = 1980
+start_month   = 10		!starting month for calibration in observed streamflow data
+start_day     = 1		!starting day for calibration in observed streamflow data  (start_month, start_day used to find first date of occurance)
+end_year    = 2008
+end_month   = 09		!starting month for calibration in observed streamflow data
+end_day     = 30		!starting day for calibration in observed streamflow data  (start_month, start_day used to find first date of occurance)
+pet_coef    = 1.739		!priestly-taylor coefficient for pet calculation (depends on aridity of region 1.26-1.34 for humid grass/forest then up to 1.74 for very dry areas).
+in_swe     = 0.0		!starting swe in mm
+in_uztwc   = 200.
+in_uzfwc   = 200.
+in_lztwc   = 200.
+in_lzfsc   = 200.
+in_lzfpc   = 200.
+in_adimc   = 100.
+/
+
+&SNOW_17
+scf	=	2.194
+mfmax	=	1.088
+mfmin	= 	0.095
+uadj	=	0.071
+si	=	1104.889
+pxtemp	= 	1.588
+nmf	=	0.15
+tipm	=	0.05
+mbase	=	0.0
+plwhc	=	0.03
+daygm	=	0.0
+adc	=	0.05,0.15,0.26,0.45,0.5,0.56,0.61,0.65,0.69,0.82,1.0
+/
+
+&SAC_SMA
+uztwm	=  1.003
+uzfwm	=  112.668
+lztwm	=  798.242
+lzfpm	=  665.046
+lzfsm   =  961.888
+adimp	=  0.0
+uzk	=  0.422
+lzpk	=  0.003
+lzsk	=  0.249
+zperc	=  196.424
+rexp	=  0.330
+pctim	=  0.005
+pfree	=  0.573
+riva	=   0.0
+side	=   0.0
+rserv	=   0.3
+unit_shape 	= 1.003		!gamma distribution shape parameter 
+unit_scale 	= 0.180		!scale parameter
+
+/

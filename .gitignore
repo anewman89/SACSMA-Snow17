@@ -16,5 +16,6 @@ bin/
 
 
 #no text files in driver or share directory
+bin/*.txt
 driver/*.txt
 share/*.txt

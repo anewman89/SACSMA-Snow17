@@ -33,14 +33,6 @@ subroutine read_namelist
     stop " ***** ERROR: Problem reading namelist SAC_SMA"
   endif
 
-  read(UNIT=30, NML=SCE, iostat=ierr)
-  if (ierr /= 0) then
-    write(*,'(/," ***** ERROR: Problem reading namelist SCE",/)')
-    rewind(UNIT=30)
-    read(UNIT=30, NML=SCE)
-    stop " ***** ERROR: Problem reading namelist SCE"
-  endif
-
   close(UNIT=30)
 
   return

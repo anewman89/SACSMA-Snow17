@@ -1,19 +1,19 @@
-subroutine julianday
+subroutine julian_day(year,month,day,jday)
   use nrtype
-  use snow17_sac, only: jday,year,month,day
 
   implicit none
 !
 ! Taken from Glen Liston's SnowModel code, updated to F90
 !
+
+
 !input variables
-!  integer,                   intent(in) :: sim_len
-!  integer,dimension(:),intent(in) :: iyear
-!  integer,dimension(:),intent(in) :: imonth
-!  integer,dimension(:),intent(in) :: iday
+  integer(I4B),dimension(:),intent(in) :: year
+  integer(I4B),dimension(:),intent(in) :: month
+  integer(I4B),dimension(:),intent(in) :: day
 
 !output variables
-!  integer,dimension(:),intent(out) :: J_day
+  integer(I4B),dimension(:),intent(out) :: jday
 
 !local variables
   integer(I4B)      :: i

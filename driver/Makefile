@@ -10,7 +10,7 @@
 #========================================================================
 
 # Define core directory below which everything resides
-F_MASTER_DIR = /home/anewman/bor_basin_calib
+F_MASTER_DIR = /home/anewman/snow17_sac
 
 # Location of the compiled modules
 MOD_PATH = $(F_MASTER_DIR)/driver
@@ -25,7 +25,6 @@ EXE_PATH = $(F_MASTER_DIR)/bin
 # Define directories
 DRIVER_DIR = $(F_MASTER_DIR)/driver
 sac_dir    = $(F_MASTER_DIR)/sac
-sce_dir    = $(F_MASTER_DIR)/sce
 snow19_dir = $(F_MASTER_DIR)/snow19
 share_dir  = $(F_MASTER_DIR)/share
 
@@ -35,27 +34,15 @@ calib_UTIL= \
 		nrtype.f90 \
 		nrutil.f90 \
 		nr.f90 \
-		sort_heap.f90 \
 		constants.f90 \
 		snow17_sac.f90 \
 		gauge_calib.f90 \
 		read_namelist.f90 \
-		functn.f90 \
 		ascii_io.f90 \
 		day_of_year.f90 \
 		sfc_pressure.f90 \
-		pet_routines.f90 \
-		spin_up_first_year_hru.f90 \
-		objective_functions.f90 \
-		snow17_sacsma_eval_hru.f90 \
-		sce_param_setup.f90
+		pet_routines.f90 
 UTIL = $(patsubst %, $(share_dir)/%, $(calib_UTIL))
-
-
-# sce procedure (fortran 77)
-calib_sceproc_77= \
-		sce_new.f
-sceproc_77 = $(patsubst %, $(sce_dir)/%, $(calib_sceproc_77))
 
 
 # snow-19 code (fortran 90, different options)
@@ -86,7 +73,7 @@ sac_77 = $(patsubst %, $(sac_dir)/%, $(calib_sac_77))
 # ... and stitch it all together...
 calib_pgf90 = $(UTIL)
 calib_pgf90_2 = $(snow19)
-calib_pgf77 = $(sceproc_77) $(sac_77)
+calib_pgf77 = $(sac_77)
 
 #========================================================================
 # PART 2: Define the libraries, driver programs, and executables
@@ -114,11 +101,11 @@ endif
 
 # Define the driver routine
 calib_DRIVER= \
-	test_huc02_region_hru.f90
+	lump_driver.f90
 DRIVER = $(patsubst %, $(DRIVER_DIR)/%, $(calib_DRIVER))
 
 # Define the executable
-DRIVER__EX = gage_calib_band.exe
+DRIVER__EX = lump_model.exe
 
 
 #========================================================================
