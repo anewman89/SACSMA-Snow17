@@ -8,6 +8,10 @@ program lump_driver
 
 
 !local variables
+
+  character(len=2000)		:: arg  !command line arg for namelist file
+  character(len=2000)		:: namelist_name  !command line arg for namelist file
+
   integer(I4B) :: i,ntau,k,m,j,cnt
 
 
@@ -82,9 +86,17 @@ program lump_driver
 !   code starts below
 !
 
+!get namelist filename
+  i = 0
+  do
+    call get_command_argument(i,arg)
+    if(i .eq. 1) namelist_name=arg
+    if(LEN_TRIM(arg) == 0) EXIT
+    i = i + 1
+  end do
 
-!read namelists
-  call read_namelist
+!read namelist file
+  call read_namelist(namelist_name)
 
   call get_sim_length(sim_length)
 

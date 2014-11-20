@@ -26,8 +26,11 @@ module gauge_calib
     end subroutine julianday_scalar
 
 
-    subroutine read_namelist
+    subroutine read_namelist(namelist_name)
       use nrtype
+      !input variable
+      character(:),intent(in)	:: namelist_name
+
     end subroutine read_namelist
 
     subroutine spin_up_first_year(a, params_in,spinup_crit, in_tair,in_precip,in_pet, &
