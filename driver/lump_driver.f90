@@ -98,6 +98,11 @@ program lump_driver
 !read namelist file
   call read_namelist(namelist_name)
 
+!read parameter files
+  call read_sac_params(sac_param_file)
+  call read_snow17_params(snow17_param_file)
+  call read_uhp_params(uhp_param_file)
+
   call get_sim_length(sim_length)
 
 !allocate variables now
@@ -179,7 +184,7 @@ program lump_driver
     precip_sp = real(precip(i),kind(sp))
     pet_sp    = real(pet(i),kind(sp))
 
-      CALL EXSNOW19(int(dt),int(dt/sec_hour),day(i),month(i),year(i),&
+    CALL EXSNOW19(int(dt),int(dt/sec_hour),day(i),month(i),year(i),&
 	!SNOW17 INPUT AND OUTPUT VARIABLES
 			  precip_sp,tair_sp,raim(i),sneqv(i),snow(i),snowh(i),&
 	!SNOW17 PARAMETERS
@@ -192,7 +197,7 @@ program lump_driver
 			  cs,tprev) 
 
 ! print *,'here 4'
-      call exsac(1,real(dt),raim(i),tair_sp,pet_sp,&
+    call exsac(1,real(dt),raim(i),tair_sp,pet_sp,&
 	!SAC PARAMETERS
 !UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC, &
 !REXP,LZTWM,LZFSM,LZFPM,LZSK,LZPK,PFREE, &
@@ -210,13 +215,13 @@ program lump_driver
 			qs(i),qg(i),tci(i),eta(i))
 
 
-      !place state variables in output arrays
-      uztwc_dp(i) = real(uztwc_sp,kind(dp))
-      uzfwc_dp(i) = real(uzfwc_sp,kind(dp))
-      lztwc_dp(i) = real(lztwc_sp,kind(dp))
-      lzfsc_dp(i) = real(lzfsc_sp,kind(dp))
-      lzfpc_dp(i) = real(lzfpc_sp,kind(dp))
-      adimc_dp(i) = real(adimc_sp,kind(dp))
+    !place state variables in output arrays
+    uztwc_dp(i) = real(uztwc_sp,kind(dp))
+    uzfwc_dp(i) = real(uzfwc_sp,kind(dp))
+    lztwc_dp(i) = real(lztwc_sp,kind(dp))
+    lzfsc_dp(i) = real(lzfsc_sp,kind(dp))
+    lzfpc_dp(i) = real(lzfpc_sp,kind(dp))
+    adimc_dp(i) = real(adimc_sp,kind(dp))
   enddo  !end simulation loop
 
   dtuh = real(dt/sec_day)

@@ -19,22 +19,6 @@ subroutine read_namelist(namelist_name)
     stop " ***** ERROR: Problem reading namelist INIT_CONTROL"
   endif
 
-  read(UNIT=30, NML=SNOW_17, iostat=ierr)
-  if (ierr /= 0) then
-    write(*,'(/," ***** ERROR: Problem reading namelist SNOW_17",/)')
-    rewind(UNIT=30)
-    read(UNIT=30, NML=SNOW_17)
-    stop " ***** ERROR: Problem reading namelist SNOW_17"
-  endif
-
-  read(UNIT=30, NML=SAC_SMA, iostat=ierr)
-  if (ierr /= 0) then
-    write(*,'(/," ***** ERROR: Problem reading namelist SAC_SMA",/)')
-    rewind(UNIT=30)
-    read(UNIT=30, NML=SAC_SMA)
-    stop " ***** ERROR: Problem reading namelist SAC_SMA"
-  endif
-
   close(UNIT=30)
 
   return

@@ -33,21 +33,6 @@ module gauge_calib
 
     end subroutine read_namelist
 
-    subroutine spin_up_first_year(a, params_in,spinup_crit, in_tair,in_precip,in_pet, &
-                                  in_raim,uztwc, uzfwc, lztwc, lzfsc, lzfpc, adimc)
-      use nrtype
-
-      real(dp), intent(in)		:: spinup_crit
-      real(dp), dimension(36500), intent(in):: in_tair,in_precip,in_pet,in_raim
-      real(sp),dimension(30),intent(in)	:: params_in
-
-
-      real(sp), dimension(30), intent(inout):: a
- 
-      real(dp), intent(out)		:: uztwc,uzfwc,lztwc
-      real(dp), intent(out)		:: lzfsc,lzfpc,adimc
-    end subroutine spin_up_first_year
-
     subroutine sfc_pressure(elev, pres)
       use nrtype
       use constants, only: sfc_pres_a,sfc_pres_b,sfc_pres_c,&
@@ -114,6 +99,35 @@ module gauge_calib
       real(dp),dimension(:),intent(out)	:: precip    
     end subroutine read_areal_forcing
 
+
+    subroutine read_sac_params(param_name)
+      use nrtype
+      use snow17_sac, only: uztwm,uzfwm,uzk,pctim,adimp,zperc,rexp, &
+			    lztwm,lzfsm,lzfpm,lzsk,lzpk,pfree,riva,side,rserv
+
+      !input variables
+      character(:),intent(in)	:: param_name
+
+    end subroutine read_sac_params
+
+    subroutine read_snow17_params(param_name)
+      use nrtype
+      use snow17_sac, only: scf,mfmax,mfmin,uadj,si,pxtemp,nmf,&
+                        tipm,mbase,plwhc,daygm,adc
+
+      !input variables
+      character(:),intent(in)	:: param_name
+
+    end subroutine read_snow17_params
+
+    subroutine read_uhp_params(param_name)
+      use nrtype
+      use snow17_sac, only: unit_shape,unit_scale,pet_coef
+
+      !input variables
+      character(:),intent(in)	:: param_name
+
+    end subroutine read_uhp_params
 
 
   end interface

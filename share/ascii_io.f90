@@ -7,7 +7,7 @@ subroutine get_sim_length(sim_length)
   integer(I4B),intent(out)	:: sim_length
 
   !local variables
-  integer(I4B)			:: ios
+  integer(I4B)			:: ios=0
   integer(I4B)			:: dum_int
   integer(I4B)			:: year,month,day
   integer(I4B)			:: read_flag
@@ -74,7 +74,7 @@ subroutine read_areal_forcing(year,month,day,hour,tmin,tmax,vpd,dayl,swdown,prec
   real(dp),dimension(:),intent(out)	:: precip
 
 !local variables
-  integer(I4B)				:: i,ios
+  integer(I4B)				:: i,ios=0
   integer(I4B)				:: yr,mnth,dy,hr
   integer(I4B)				:: read_flag
 
@@ -155,7 +155,7 @@ subroutine read_streamflow(streamflow)
 
 !local variables
   integer(I4B) :: i
-  integer(I4B) :: yr,mn,dy,gauge,ios,error
+  integer(I4B) :: yr,mn,dy,gauge,ios=0,error
   real(dp)    :: flow
 
   logical	:: valid
@@ -207,3 +207,180 @@ subroutine read_streamflow(streamflow)
   return
 
 end subroutine read_streamflow
+
+!ccccccccccccccccccccccccccccccc
+!
+! subroutines for reading param files: sac, snow17, unit hydrograph & pet
+!
+!ccccccccccccccccccccccccccccccc
+
+subroutine read_sac_params(param_name)
+  use nrtype
+  use snow17_sac, only: uztwm,uzfwm,uzk,pctim,adimp,zperc,rexp, &
+			lztwm,lzfsm,lzfpm,lzsk,lzpk,pfree,riva,side,rserv
+
+  implicit none
+ 
+!input variables
+  character(:),intent(in)	:: param_name
+ 
+!local variables
+  character(len=50)		:: param
+  
+  real(sp)			:: value
+
+  integer(I4B)			:: ios=1
+ 
+  open(unit=50,file=trim(param_name))
+
+  do while(ios .ge. 0)
+    read(unit=50,FMT=*,IOSTAT=ios) param,value
+
+    if(param == 'uztwm') then
+      uztwm = value
+    else if(param == 'uzfwm') then
+      uzfwm = value
+    else if(param == 'uzk') then
+      uzk = value
+    else if(param == 'pctim') then
+      pctim = value
+    else if(param == 'adimp') then
+      adimp = value
+    else if(param == 'zperc') then
+      zperc = value
+    else if(param == 'rexp') then
+      rexp = value
+    else if(param == 'lztwm') then
+      lztwm = value
+    else if(param == 'lzfsm') then
+      lzfsm = value
+    else if(param == 'lzfpm') then
+      lzfpm = value
+    else if(param == 'lzsk') then
+      lzsk = value
+    else if(param == 'lzpk') then
+      lzpk = value
+    else if(param == 'pfree') then
+      pfree = value
+    else if(param == 'riva') then
+      riva = value
+    else if(param == 'side') then
+      side = value
+    else if(param == 'rserv') then
+      rserv = value
+    end if
+  end do
+  close(unit=50)
+
+  return
+end subroutine read_sac_params
+
+!ccccccccc
+subroutine read_snow17_params(param_name)
+  use nrtype
+  use snow17_sac, only: scf,mfmax,mfmin,uadj,si,pxtemp,nmf,&
+                        tipm,mbase,plwhc,daygm,adc
+
+  implicit none
+ 
+!input variables
+  character(:),intent(in)	:: param_name
+
+!local variables
+  character(len=50)		:: param
+  
+  real(sp)			:: value
+
+  integer(I4B)			:: ios=1
+
+  open(unit=50,file=trim(param_name))
+
+  do while(ios .ge. 0)
+    read(unit=50,FMT=*,IOSTAT=ios) param,value
+
+    if(param == 'mfmax') then
+      mfmax = value
+    else if(param == 'mfmin') then
+      mfmin = value
+    else if(param == 'scf') then
+      scf = value
+    else if(param == 'uadj') then
+      uadj = value
+    else if(param == 'si') then
+      si = value
+    else if(param == 'pxtemp') then
+      pxtemp = value
+    else if(param == 'nmf') then
+      nmf = value
+    else if(param == 'tipm') then
+      tipm = value
+    else if(param == 'mbase') then
+      mbase = value
+    else if(param == 'plwhc') then
+      plwhc = value
+    else if(param == 'daygm') then
+      daygm = value
+    else if(param == 'adc1') then
+      adc(1) = value
+    else if(param == 'adc2') then
+      adc(2) = value
+    else if(param == 'adc3') then
+      adc(3) = value
+    else if(param == 'adc4') then
+      adc(4) = value
+    else if(param == 'adc5') then
+      adc(5) = value
+    else if(param == 'adc6') then
+      adc(6) = value
+    else if(param == 'adc7') then
+      adc(7) = value
+    else if(param == 'adc8') then
+      adc(8) = value
+    else if(param == 'adc9') then
+      adc(9) = value
+    else if(param == 'adc10') then
+      adc(10) = value
+    else if(param == 'adc11') then
+      adc(11) = value
+    end if
+  end do
+
+  close(unit=50)
+
+  return
+end subroutine read_snow17_params
+
+!cccccccccccc
+subroutine read_uhp_params(param_name)
+  use nrtype
+  use snow17_sac, only: unit_shape,unit_scale,pet_coef
+
+  implicit none
+ 
+!input variables
+  character(:),intent(in)	:: param_name
+
+!local variables
+  character(len=50)		:: param
+  
+  real(sp)			:: value
+
+  integer(I4B)			:: ios=1
+
+  open(unit=50,file=trim(param_name))
+  
+  do while(ios .ge. 0)
+    read(unit=50,FMT=*,IOSTAT=ios) param,value
+
+    if(param == 'unit_shape') then
+      unit_shape = value
+    else if(param == 'unit_scale') then
+      unit_scale = value
+    else if(param == 'pet_coef') then
+      pet_coef = value
+    end if
+  end do
+  close(unit=50)
+
+  return
+end subroutine read_uhp_params
