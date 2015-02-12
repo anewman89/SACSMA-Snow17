@@ -3,7 +3,11 @@ program lump_driver
   use snow17_sac
   use constants, only: sec_hour,sec_day
   use gauge_calib, only: read_namelist, calc_pet_pt, sfc_pressure, &
-                         read_areal_forcing,read_streamflow, get_sim_length,julian_day
+                         read_areal_forcing,read_streamflow, get_sim_length, &
+			 julian_day,write_snow17_state,write_sac_state, &
+			 read_sac_state,read_snow17_state,read_uh_state, &
+			 write_uh_state
+
   implicit none
 
 
@@ -14,6 +18,7 @@ program lump_driver
 
   integer(I4B) :: i,ntau,k,m,j,cnt
 
+  integer(I4B) :: end_pt		!end point for old uh state addition
 
   integer(I4B) :: error
 
@@ -45,7 +50,10 @@ program lump_driver
 
 !unit hydrograph
   real(sp),dimension(1000)       :: unit_hydro
+  integer(I4B)			 :: uh_length
 
+!restart array for unit hydrograph
+  real(sp),dimension(:),allocatable		:: uh_state
 
 !ALLOCATABLE VARIABLES
 
@@ -82,9 +90,12 @@ program lump_driver
 !derived forcing variables
   real(dp), dimension(:),allocatable :: pet,tair
 
+
 !
 !   code starts below
 !
+
+  uh_length = size(unit_hydro,1)
 
 !get namelist filename
   i = 0
@@ -145,7 +156,9 @@ program lump_driver
   allocate(snow(sim_length))
   allocate(raim(sim_length))
 
+
 !print *,'here',sim_length
+
 !read forcing data
   call read_areal_forcing(year,month,day,hour,tmin,tmax,&
 			  vpd,dayl,swdown,precip)
@@ -165,17 +178,29 @@ program lump_driver
 !run model
 
 !set single precision sac state variables to initial values
-  uztwc_sp = in_uztwc
-  uzfwc_sp = in_uzfwc
-  lztwc_sp = in_lztwc
-  lzfsc_sp = in_lzfsc
-  lzfpc_sp = in_lzfpc
-  adimc_sp = in_adimc
+  if(restart_run .eq. 0) then
+    uztwc_sp = in_uztwc
+    uzfwc_sp = in_uzfwc
+    lztwc_sp = in_lztwc
+    lzfsc_sp = in_lzfsc
+    lzfpc_sp = in_lzfpc
+    adimc_sp = in_adimc
+    cs(1) = in_swe
+  elseif(restart_run .gt. 0) then
+    !if restart run: read in output state files
+    !this overwrites namelist sac state variables and initial swe
 
-!set initial swe for snow-17
-  sneqv(1) = in_swe/1000. 
+    !get snow17 states
+    call read_snow17_state(cs,tprev)
 
- ! print *,'here'
+    !get sac-sma states
+    call read_sac_state(uztwc_sp,uzfwc_sp,lztwc_sp,lzfsc_sp,lzfpc_sp,adimc_sp)
+
+    !also need to get in water in channel
+    allocate(uh_state(uh_length))
+    call read_uh_state(uh_state,uh_length,sim_length)
+
+  endif
 
 
   do i = 1,sim_length,1
@@ -224,6 +249,7 @@ program lump_driver
     adimc_dp(i) = real(adimc_sp,kind(dp))
   enddo  !end simulation loop
 
+
   dtuh = real(dt/sec_day)
 
 
@@ -240,7 +266,24 @@ program lump_driver
 
 !call unit hydrograph routine
   if(unit_shape .gt. 0.0) then
-    call DUAMEL(tci,1,unit_hydro,unit_shape,unit_scale,dtuh,sim_length-1,m,route_tci,k,ntau)
+    call DUAMEL(tci,1,unit_hydro,unit_shape,unit_scale,dtuh,sim_length,m,route_tci,k,ntau)
+  endif
+
+
+  if(restart_run) then
+  !!!!!
+  !add prior UH state to routed flow array...
+      
+    if(sim_length .lt. uh_length) then
+      end_pt = sim_length
+    else
+      end_pt = uh_length
+    endif
+
+    do i = 1,end_pt
+        route_tci(i) = route_tci(i) + sum(uh_state(i:end_pt))
+    enddo
+
   endif
 
 
@@ -265,5 +308,17 @@ program lump_driver
     endif
   enddo
   close(unit=45)
+
+  if(write_restart) then
+
+    !need to write out a snow17 state file for carryover variables and tprev
+    call write_snow17_state(cs,tprev)
+    !need to write a SAC-SMA state file
+    call write_sac_state(uztwc_sp,uzfwc_sp,lztwc_sp,lzfsc_sp,lzfpc_sp,adimc_sp)
+    !need to write Unit hydrograph state file
+    call write_uh_state(tci(sim_length),unit_hydro,uh_length)
+
+  endif
+
 
 end program

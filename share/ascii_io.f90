@@ -1,3 +1,178 @@
+subroutine write_snow17_state(cs,tprev)
+  use nrtype
+  use snow17_sac, only: snow17_state_out_file
+
+  implicit none
+
+  !input variables
+  real(sp), intent(in) 			:: tprev				!carry over variable
+  real(sp), dimension(:), intent(in)	:: cs					!carry over array
+
+  !local variables
+  integer(I4B)	:: i
+
+  open(unit=95,FILE=trim(snow17_state_out_file),FORM='formatted')
+
+  do i = 1,19
+    write(95,*) cs(i)
+  enddo
+  write(95,*) tprev
+  close(unit=95)
+
+  return
+end subroutine write_snow17_state
+
+!ccccccccccccccccccccccccccccccc
+
+subroutine write_sac_state(uztwc,uzfwc,lztwc,lzfsc,lzfpc,adimc)
+  use nrtype
+  use snow17_sac, only: sac_state_out_file
+ 
+  implicit none
+
+  !input variables
+  real(sp), intent(in)	:: uztwc					!state variable
+  real(sp), intent(in)	:: uzfwc					!state variable
+  real(sp), intent(in)	:: lztwc					!state variable
+  real(sp), intent(in)	:: lzfsc					!state variable
+  real(sp), intent(in)	:: lzfpc					!state variable
+  real(sp), intent(in)	:: adimc					!state variable
+
+  open(unit=95,FILE=trim(sac_state_out_file),FORM='formatted')
+
+  write(95,*) uztwc
+  write(95,*) uzfwc
+  write(95,*) lztwc
+  write(95,*) lzfsc
+  write(95,*) lzfpc
+  write(95,*) adimc
+
+  close(unit=95)
+
+  return
+
+end subroutine write_sac_state
+
+!cccccccccccccccccccccccccccccccccccccccccc
+
+subroutine read_uh_state(uh_flow,uh_length,sim_length)
+  use nrtype
+  use snow17_sac, only: uh_state_in_file
+
+  implicit none
+
+  !input variable
+  integer(I4B), intent(in)				:: uh_length,sim_length
+
+  !output variables
+  real(sp), dimension(:), intent(out) 			:: uh_flow
+
+  !local variables
+  integer(I4B)		:: i,end_pt
+
+  if(sim_length .lt. uh_length) then
+    end_pt = sim_length
+  else
+    end_pt = uh_length
+  endif
+
+  open(unit=95,FILE=trim(uh_state_in_file),FORM='formatted',status='old')
+
+  do i = 1,end_pt
+    read(95,*) uh_flow(i)
+  enddo
+
+  close(unit=95)
+
+  return
+end subroutine read_uh_state
+
+!cccccccccccccccccccccccccccccccccccccccccc
+
+subroutine write_uh_state(tci,uh,uh_length)
+  use nrtype
+  use snow17_sac, only: uh_state_out_file
+
+  implicit none
+
+  !input variables
+  integer(I4B), intent(in)				:: uh_length
+  real(sp), dimension(:), intent(in) 			:: uh
+  real(sp), intent(in)					:: tci
+
+  !local variables
+  integer(I4B)		:: i
+
+
+  open(unit=95,FILE=trim(uh_state_out_file),FORM='formatted')
+
+  do i = 2,uh_length
+    write(95,*) uh(i)*tci
+  enddo
+
+  close(unit=95)
+
+  return
+end subroutine write_uh_state
+
+!ccccccccccccccccccccccccccccccc
+
+subroutine read_snow17_state(cs,tprev)
+  use nrtype
+  use snow17_sac, only: snow17_state_in_file
+
+  implicit none
+
+  !input variables
+  real(sp), intent(out) 			:: tprev				!carry over variable
+  real(sp), dimension(:), intent(out)	:: cs					!carry over array
+
+  !local variables
+  integer(I4B)	:: i
+
+  open(unit=95,FILE=trim(snow17_state_in_file),FORM='formatted',status='old')
+
+  do i = 1,19
+    read(95,*) cs(i)
+  enddo
+  read(95,*) tprev
+  close(unit=95)
+
+  return
+end subroutine read_snow17_state
+
+!ccccccccccccccccccccccccccccccc
+
+subroutine read_sac_state(uztwc,uzfwc,lztwc,lzfsc,lzfpc,adimc)
+  use nrtype
+  use snow17_sac, only: sac_state_in_file
+ 
+  implicit none
+
+  !input variables
+  real(sp), intent(out)	:: uztwc					!state variable
+  real(sp), intent(out)	:: uzfwc					!state array
+  real(sp), intent(out)	:: lztwc					!state array
+  real(sp), intent(out)	:: lzfsc					!state array
+  real(sp), intent(out)	:: lzfpc					!state array
+  real(sp), intent(out)	:: adimc					!state array
+
+  open(unit=95,FILE=trim(sac_state_in_file),FORM='formatted',status='old')
+
+  read(95,*) uztwc
+  read(95,*) uzfwc
+  read(95,*) lztwc
+  read(95,*) lzfsc
+  read(95,*) lzfpc
+  read(95,*) adimc
+
+  close(unit=95)
+
+  return
+end subroutine read_sac_state
+
+!ccccccccccccccccccccccccccccccc
+
 subroutine get_sim_length(sim_length)
   use nrtype
   use snow17_sac, only: forcing_name, start_year,start_day,start_month, &
@@ -105,7 +280,7 @@ subroutine read_areal_forcing(year,month,day,hour,tmin,tmax,vpd,dayl,swdown,prec
   !observed streamflow varies in its start date by gauge
 
   do while(ios .ge. 0)
-    read (UNIT=50,FMT=read_format,IOSTAT=ios) yr,mnth,dy,hr,&
+    read (UNIT=50,FMT=*,IOSTAT=ios) yr,mnth,dy,hr,&
 			    dl,pcp,sw,swe,tma,&
 			    tmn,vp
 
@@ -229,11 +404,11 @@ subroutine read_sac_params(param_name)
   
   real(sp)			:: value
 
-  integer(I4B)			:: ios=1
+  integer(I4B)			:: ios=0
  
   open(unit=50,file=trim(param_name))
 
-  do while(ios .ge. 0)
+  do while(ios .eq. 0)
     read(unit=50,FMT=*,IOSTAT=ios) param,value
 
     if(param == 'uztwm') then
@@ -291,11 +466,11 @@ subroutine read_snow17_params(param_name)
   
   real(sp)			:: value
 
-  integer(I4B)			:: ios=1
+  integer(I4B)			:: ios=0
 
   open(unit=50,file=trim(param_name))
 
-  do while(ios .ge. 0)
+  do while(ios .eq. 0)
     read(unit=50,FMT=*,IOSTAT=ios) param,value
 
     if(param == 'mfmax') then
@@ -365,11 +540,11 @@ subroutine read_uhp_params(param_name)
   
   real(sp)			:: value
 
-  integer(I4B)			:: ios=1
+  integer(I4B)			:: ios=0
 
   open(unit=50,file=trim(param_name))
   
-  do while(ios .ge. 0)
+  do while(ios .eq. 0)
     read(unit=50,FMT=*,IOSTAT=ios) param,value
 
     if(param == 'unit_shape') then

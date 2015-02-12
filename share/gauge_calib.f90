@@ -80,6 +80,73 @@ module gauge_calib
       real(dp),dimension(:),intent(out)	:: streamflow
     end subroutine read_streamflow
 
+    subroutine write_snow17_state(cs,tprev)
+      use nrtype
+      use snow17_sac, only: snow17_state_out_file
+
+      !input variables
+      real(sp), intent(in) 			:: tprev				!carry over variable
+      real(sp), dimension(:), intent(in)	:: cs					!carry over array
+
+    end subroutine write_snow17_state
+
+    subroutine write_sac_state(uztwc,uzfwc,lztwc,lzfsc,lzfpc,adimc)
+      use nrtype
+      use snow17_sac, only: sac_state_out_file
+
+      !input variables
+      real(sp), intent(in)	:: uztwc					!state variable
+      real(sp), intent(in)	:: uzfwc					!state array
+      real(sp), intent(in)	:: lztwc					!state array
+      real(sp), intent(in)	:: lzfsc					!state array
+      real(sp), intent(in)	:: lzfpc					!state array
+      real(sp), intent(in)	:: adimc					!state array
+    end subroutine write_sac_state
+
+    subroutine read_snow17_state(cs,tprev)
+      use nrtype
+      use snow17_sac, only: snow17_state_in_file
+
+      !input variables
+      real(sp), intent(out) 			:: tprev				!carry over variable
+      real(sp), dimension(:), intent(out)	:: cs					!carry over array
+
+    end subroutine read_snow17_state
+
+    subroutine read_sac_state(uztwc,uzfwc,lztwc,lzfsc,lzfpc,adimc)
+      use nrtype
+      use snow17_sac, only: sac_state_in_file
+
+      !input variables
+      real(sp), intent(out)	:: uztwc					!state variable
+      real(sp), intent(out)	:: uzfwc					!state array
+      real(sp), intent(out)	:: lztwc					!state array
+      real(sp), intent(out)	:: lzfsc					!state array
+      real(sp), intent(out)	:: lzfpc					!state array
+      real(sp), intent(out)	:: adimc					!state array
+    end subroutine read_sac_state
+
+    subroutine write_uh_state(tci,uh,uh_length)
+      use nrtype
+      use snow17_sac, only: uh_state_out_file
+
+      !input variables
+      integer(I4B), intent(in)				:: uh_length
+      real(sp), dimension(:), intent(in) 		:: uh
+      real(sp), intent(in) 				:: tci
+    end subroutine write_uh_state
+
+    subroutine read_uh_state(uh_flow,uh_length,sim_length)
+      use nrtype
+      use snow17_sac, only: uh_state_in_file
+
+      !input variable
+      integer(I4B), intent(in)				:: uh_length,sim_length
+
+      !output variables
+      real(sp), dimension(:), intent(out) 			:: uh_flow
+    end subroutine read_uh_state
+
 
     subroutine read_areal_forcing(year,month,day,hour,tmin,tmax,vpd,dayl,swdown,precip)
       use nrtype

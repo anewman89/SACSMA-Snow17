@@ -12,6 +12,12 @@ module snow17_sac
   character(len = 1024) 	:: sac_param_file		!name for sac-sma parameters
   character(len = 1024) 	:: snow17_param_file		!name for snow17 parameters
   character(len = 1024) 	:: uhp_param_file		!name for uh and pet parameters
+  character(len = 1024)		:: uh_state_out_file		!name for uh state output file
+  character(len = 1024)		:: uh_state_in_file		!name for uh state input file
+  character(len = 1024)		:: snow17_state_out_file	!name for snow17 state output file
+  character(len = 1024)		:: sac_state_out_file	!name for sac state output file
+  character(len = 1024)		:: snow17_state_in_file	!name for snow17 state input file
+  character(len = 1024)		:: sac_state_in_file	!name for sac state input file
   integer(I4B) 			:: gage_id		!usgs gage id 
   integer(I4B)			:: start_month		!starting month 
   integer(I4B)			:: start_day		!starting day
@@ -19,6 +25,8 @@ module snow17_sac
   integer(I4B)			:: end_month		!ending month 
   integer(I4B)			:: end_day		!ending day
   integer(I4B)			:: end_year		!ending year
+  integer(I4B)			:: restart_run		!restart run flag
+  integer(I4B)			:: write_restart	!flag to tell current run to write restart files
   real(sp)			:: in_swe
   real(sp)			:: in_uztwc
   real(sp)			:: in_uzfwc
@@ -71,6 +79,10 @@ module snow17_sac
   namelist / INIT_CONTROL / dt,forcing_name,stream_name,model_out,gage_id, &
                             start_day,start_month,start_year,end_year,end_month, &
                             end_day,in_swe,in_uztwc,in_uzfwc,in_lztwc,in_lzfsc, &
-                            in_lzfpc,in_adimc,sac_param_file,snow17_param_file,uhp_param_file
+                            in_lzfpc,in_adimc,sac_param_file,snow17_param_file,uhp_param_file, &
+			    uh_state_in_file,restart_run,write_restart, &
+			    snow17_state_out_file,sac_state_out_file,snow17_state_in_file, &
+			    sac_state_in_file,uh_state_out_file
+
   save
 end module
