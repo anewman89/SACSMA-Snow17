@@ -269,6 +269,9 @@ program lump_driver
     call DUAMEL(tci,1,unit_hydro,unit_shape,unit_scale,dtuh,sim_length,m,route_tci,k,ntau)
   endif
 
+!do i=1,50
+!write(*,'(F5.4)') unit_hydro(i)
+!enddo
 
   if(restart_run) then
   !!!!!
