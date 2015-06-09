@@ -126,14 +126,15 @@ module gauge_calib
       real(sp), intent(out)	:: adimc					!state array
     end subroutine read_sac_state
 
-    subroutine write_uh_state(tci,uh,uh_length)
+    subroutine write_uh_state(route_tci,old_uh,sim_length,uh_length)
       use nrtype
       use snow17_sac, only: uh_state_out_file
 
       !input variables
       integer(I4B), intent(in)				:: uh_length
-      real(sp), dimension(:), intent(in) 		:: uh
-      real(sp), intent(in) 				:: tci
+      integer(I4B), intent(in)				:: sim_length
+      real(sp), dimension(:),intent(in) 		:: old_uh
+      real(sp), dimension(:),intent(in)			:: route_tci
     end subroutine write_uh_state
 
     subroutine read_uh_state(uh_flow,uh_length,sim_length)

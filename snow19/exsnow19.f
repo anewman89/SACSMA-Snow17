@@ -17,7 +17,7 @@ C.......................................
       REAL MFMAX1,MFMIN1,NMF1
       REAL ADC(11),SMFV(12),AE(2,14),CS(19)
       INTEGER JULDAY(12)
-      COMMON/FSNWUP/IUPWE,IUPSC
+       COMMON/FSNWUP/IUPWE,IUPSC
       COMMON/SNCO19/WE,NEGHS,LIQW,TINDEX,ACCMAX,SB,SBAESC,SBWS,STORGE,
      1   AEADJ,NEXLAG,EXLAG(7),SNDPT,SNTMP
       COMMON/SNUP19/MFC,SFALLX,WINDC,SCTOL,WETOL,SNOF,UADJC
@@ -46,7 +46,9 @@ C     CONSTANT
 C     IF SNOWFALL IS LESS THAN HSNOF/HR -- DO NOT
 C        LEAVE CURRENT DEPLETION CURVE.
       HSNOF = 0.2
-
+      
+C      PRINT *,MFMAX1,MFMIN1
+      
       KHR = IDT*IDTS/3600
       KDA = JULDAY(IMN)+IDA
       NEXLAG = 5/IDT + 2
@@ -78,7 +80,7 @@ C      PA=33.86*PA
       GM=DAYGM
       PGM=(GM*IDT)/24.0
       TIPM=1.0-((1.0-TIPM1)**(IDT/6.0))
-
+C      PRINT *,"MFMAX 6hr",MFMAX,MFMIN     
 C.......................................
 C     CARRYOVER VALUES.
       WE=CS(1)
@@ -159,7 +161,7 @@ C     SAVE CARRYOVER VALUES.
       CS(4)=TINDEX
       CS(5)=ACCMAX
       CS(6)=SB
-      CS(7)=SBASESC
+      CS(7)=SBAESC
       CS(8)=SBWS
       CS(9)=STORGE
       CS(10)=AEADJ

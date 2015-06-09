@@ -70,12 +70,12 @@ subroutine read_uh_state(uh_flow,uh_length,sim_length)
   !local variables
   integer(I4B)		:: i,end_pt
 
-  if(sim_length .lt. uh_length) then
-    end_pt = sim_length
-  else
-    end_pt = uh_length
-  endif
-
+!  if(sim_length .lt. uh_length) then
+!    end_pt = sim_length
+!  else
+!    end_pt = uh_length
+!  endif
+  end_pt = uh_length-1
   open(unit=95,FILE=trim(uh_state_in_file),FORM='formatted',status='old')
 
   do i = 1,end_pt
@@ -89,7 +89,7 @@ end subroutine read_uh_state
 
 !cccccccccccccccccccccccccccccccccccccccccc
 
-subroutine write_uh_state(tci,uh,uh_length)
+subroutine write_uh_state(route_tci,old_uh,sim_length,uh_length)
   use nrtype
   use snow17_sac, only: uh_state_out_file
 
@@ -97,17 +97,45 @@ subroutine write_uh_state(tci,uh,uh_length)
 
   !input variables
   integer(I4B), intent(in)				:: uh_length
-  real(sp), dimension(:), intent(in) 			:: uh
-  real(sp), intent(in)					:: tci
+  integer(I4B), intent(in)				:: sim_length
+  real(sp), dimension(:), intent(in) 			:: route_tci
+  real(sp), dimension(:), intent(in) 			:: old_uh
+
 
   !local variables
-  integer(I4B)		:: i
+  integer(I4B)				:: i,len_old,start_old
+  real(sp),allocatable,dimension(:)	:: out_uh
 
+  allocate(out_uh(uh_length))
+
+
+  start_old = sim_length
+
+!print *,'lere',start_old,uh_length,sim_length
+  out_uh = 0.0
+
+  if(uh_length-start_old .lt. 1) then
+    do i = 1,uh_length
+      out_uh(i) = route_tci(i)
+    enddo
+  else
+    do i = 1,uh_length
+      if(i .lt. uh_length-start_old) then
+	out_uh(i) = route_tci(i) + old_uh(i+start_old-1)
+!print *,old_uh(i+start_old),route_tci(i)
+      else
+	out_uh(i) = route_tci(i)
+      endif
+    enddo
+  endif
 
   open(unit=95,FILE=trim(uh_state_out_file),FORM='formatted')
 
+  !need to take the last time input channel flow from sac and route it
+  !through uh and output
+  !also need to consider old_uh and add any flow that occurs in the future from the end of the simulation
   do i = 2,uh_length
-    write(95,*) uh(i)*tci
+    write(95,*) out_uh(i)
   enddo
 
   close(unit=95)

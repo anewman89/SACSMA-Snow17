@@ -147,8 +147,8 @@ program lump_driver
   allocate(qg(sim_length))
   allocate(qs(sim_length))
   allocate(eta(sim_length))
-  allocate(tci(sim_length))
-  allocate(route_tci(sim_length))
+  allocate(tci(sim_length+uh_length))
+  allocate(route_tci(sim_length+uh_length))
 
 !snow-17 output variables
   allocate(snowh(sim_length))
@@ -177,6 +177,11 @@ program lump_driver
 !print *,'here'
 !run model
 
+!get sfc_pressure
+  call sfc_pressure(elev,pa)
+
+  allocate(uh_state(uh_length))
+  uh_state = 0.0
 !set single precision sac state variables to initial values
   if(restart_run .eq. 0) then
     uztwc_sp = in_uztwc
@@ -197,18 +202,22 @@ program lump_driver
     call read_sac_state(uztwc_sp,uzfwc_sp,lztwc_sp,lzfsc_sp,lzfpc_sp,adimc_sp)
 
     !also need to get in water in channel
-    allocate(uh_state(uh_length))
     call read_uh_state(uh_state,uh_length,sim_length)
 
   endif
 
 
   do i = 1,sim_length,1
+
   !set single precision inputs
     tair_sp   = real(tair(i),kind(sp))
     precip_sp = real(precip(i),kind(sp))
     pet_sp    = real(pet(i),kind(sp))
-
+print *,'Pressure',pa
+print *,day(i),month(i),year(i),precip_sp,tair_sp,lat,elev,raim(i)
+print *,tprev,cs
+print *,'melt!',mfmax,mfmin
+!tair_sp = 10.0
     CALL EXSNOW19(int(dt),int(dt/sec_hour),day(i),month(i),year(i),&
 	!SNOW17 INPUT AND OUTPUT VARIABLES
 			  precip_sp,tair_sp,raim(i),sneqv(i),snow(i),snowh(i),&
@@ -222,6 +231,9 @@ program lump_driver
 			  cs,tprev) 
 
 ! print *,'here 4'
+
+print *,'snow',snow(i),snowh(i)
+
     call exsac(1,real(dt),raim(i),tair_sp,pet_sp,&
 	!SAC PARAMETERS
 !UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC, &
@@ -266,12 +278,15 @@ program lump_driver
 
 !call unit hydrograph routine
   if(unit_shape .gt. 0.0) then
-    call DUAMEL(tci,1,unit_hydro,unit_shape,unit_scale,dtuh,sim_length,m,route_tci,k,ntau)
+    call DUAMEL(tci,1,unit_hydro,unit_shape,unit_scale,dtuh,sim_length+uh_length,m,route_tci,k,ntau)
   endif
 
-!do i=1,50
-!write(*,'(F5.4)') unit_hydro(i)
+!do i=-10,20
+!do i = 1,sim_length+40
+!!  print *, unit_hydro(i), route_tci(sim_length+i)
+!  print *, route_tci(i)
 !enddo
+!print *,uh_state(1:10)
 
   if(restart_run) then
   !!!!!
@@ -284,8 +299,11 @@ program lump_driver
     endif
 
     do i = 1,end_pt
-        route_tci(i) = route_tci(i) + sum(uh_state(i:end_pt))
+!        route_tci(i) = route_tci(i) + sum(uh_state(i:uh_length-1))
+      route_tci(i) = route_tci(i) + uh_state(i)
     enddo
+
+
 
   endif
 
@@ -319,8 +337,13 @@ program lump_driver
     !need to write a SAC-SMA state file
     call write_sac_state(uztwc_sp,uzfwc_sp,lztwc_sp,lzfsc_sp,lzfpc_sp,adimc_sp)
     !need to write Unit hydrograph state file
-    call write_uh_state(tci(sim_length),unit_hydro,uh_length)
-
+!    if(sim_length .lt. uh_length) then
+!      call write_uh_state(tci(sim_length),unit_hydro,uh_state(sim_length+1:uh_length-1),uh_length)
+    call write_uh_state(route_tci(sim_length:sim_length+uh_length),uh_state,sim_length,uh_length)
+!    else
+!      call write_uh_state(tci(sim_length),unit_hydro,uh_state(uh_length-2:uh_length-1),uh_length)
+!      call write_uh_state(tci(sim_length),unit_hydro,uh_state(1:uh_length-1),uh_length)
+!    endif
   endif
 
 

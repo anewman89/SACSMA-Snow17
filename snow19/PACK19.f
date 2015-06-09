@@ -174,6 +174,7 @@ C.......................................
 C     COMPUTE SURFACE ENERGY EXCHANGE FOR THE COMPUTATIONAL PERIOD BASED
 C        ON 100 PERCENT COVER AND NON-RAIN CONDITIONS -
       IF(MC.EQ.1) GO TO 115
+C      PRINT *,"PACK19",MFMAX,MFMIN
       CALL MELT19(IDN,IMN,ALAT,TA,PMELT,MFMAX,MFMIN,MBASE,TINDEX,TIPM,
      1   PCNHS,NMF,LMFV,SMFV)
       MC=1
@@ -189,6 +190,7 @@ C     NON-RAIN OR LIGHT DIZZLE INTERVAL
       MELT=MELT*MFC
       MELT=MELT+RAINM
       GO TO 130
+C      print *,"norain",melt
 C
 C     RAIN INTERVAL.
   120 EA=2.7489E8*EXP(-4278.63/(TA+242.792))
@@ -207,12 +209,14 @@ C     UADJC IS UADJ MOD MULTIPLIER added by mike smith 2/12/97
       MELT=QN+QE+QH+RAINM
       IF(MELT.LT.0.0) MELT=0.0
       NR=0
-  
+C        print *,"uadjc",melt
 C.......................................
 C     COMPUTE AREAL EXTENT OF SNOW COVER BASED ON CONDITIONS AT THE
 C        BEGINNING OF THE TIME INTERVAL ADJUSTED FOR NEW SNOWFALL.
 C
+      
   130 CALL AESC19(WE,LIQW,ACCMAX,SB,SBAESC,SBWS,SI,ADC,AEADJ,AESC)
+C      print *,'ASEC',we,liqw,accmax,sb,sbaesc,sbws,si,aeadj,aesc
 C
 C     ADJUST VALUES FOR AESC.
       IF(AESC.EQ.1.0) GO TO 134
@@ -220,6 +224,7 @@ C     ADJUST VALUES FOR AESC.
       CNHS=CNHS*AESC
       GMWLOS=GMWLOS*AESC
       GMSLOS=GMSLOS*AESC
+C       print *,"aesc",melt
 C.......................................
 C     COMPUTE RAIN FALLING ON BARE GROUND
       ROBG=(1.0-AESC)*RAIN
@@ -247,6 +252,7 @@ C
 C     SURFACE MELT
       IF(MELT.LE.0.0) GO TO 137
       IF(MELT.LT.WE) GO TO 136
+C       print *,"surface melt",melt,we
       MELT=WE+LIQW
       QNET=MELT
       DQNET=DQNET+QNET
@@ -351,7 +357,7 @@ CVK   CALL SNDEPTH SUBROUTINE TO CALCULATE SNOW DEPTH
        DS=0.1
       ENDIF
 CVK ---------------------------------------------------------      
-
+C      print *,"endofpack",melt,packro
       TWE=WE+LIQW+TEX+STORGE
       IF (TWE.EQ.0.0) GO TO 215
 C

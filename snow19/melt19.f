@@ -76,6 +76,7 @@ C     UPDATE TINDEX
 C.......................................
 C     SURFACE MELT.
       MELT=MF*TMX
+C      print *,"MELT:",melt,tmx,mf,dayn,diff,mfmax,mfmin,adjmf
 C.......................................
       RETURN
       END
