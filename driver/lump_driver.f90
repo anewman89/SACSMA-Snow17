@@ -164,7 +164,13 @@ program lump_driver
 			  vpd,dayl,swdown,precip)
 !print *,'here'
 !read streamflow
-  call read_streamflow(streamflow)
+  if(stream_name == '-9999' .or. stream_name == '-9999.0' .or. stream_name == '-9' &
+     .or. stream_name == '-99' .or. stream_name == '-999' .or. stream_name == '-9.0' &
+     .or. stream_name == '-99.0' .or. stream_name == '-999.0') then
+    streamflow = -9999.0
+  else
+    call read_streamflow(streamflow)
+  endif
 
 !print *,'here'
 !get day of year array setup
