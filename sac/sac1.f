@@ -435,6 +435,7 @@ C.......................................
 C     WRITTEN BY ERIC ANDERSON - HRL   JUNE 1980
 C.......................................
       REAL LZTWM,LZFSM,LZFPM,LZSK,LZPK,LZTWC,LZFSC,LZFPC
+      REAL LWE
 C
 C     COMMON BLOCKS
       COMMON/SACPARM1/UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC,REXP,LZTWM,

@@ -29,7 +29,7 @@ module gauge_calib
     subroutine read_namelist(namelist_name)
       use nrtype
       !input variable
-      character(:),intent(in)	:: namelist_name
+      character(len=2000),intent(in)	:: namelist_name
 
     end subroutine read_namelist
 
@@ -174,7 +174,7 @@ module gauge_calib
 			    lztwm,lzfsm,lzfpm,lzsk,lzpk,pfree,riva,side,rserv
 
       !input variables
-      character(:),intent(in)	:: param_name
+      character(len=1024),intent(in)	:: param_name
 
     end subroutine read_sac_params
 
@@ -184,7 +184,7 @@ module gauge_calib
                         tipm,mbase,plwhc,daygm,adc
 
       !input variables
-      character(:),intent(in)	:: param_name
+      character(len=1024),intent(in)	:: param_name
 
     end subroutine read_snow17_params
 
@@ -193,7 +193,7 @@ module gauge_calib
       use snow17_sac, only: unit_shape,unit_scale,pet_coef
 
       !input variables
-      character(:),intent(in)	:: param_name
+      character(len=1024),intent(in)	:: param_name
 
     end subroutine read_uhp_params
 

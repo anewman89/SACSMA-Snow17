@@ -219,10 +219,10 @@ program lump_driver
     tair_sp   = real(tair(i),kind(sp))
     precip_sp = real(precip(i),kind(sp))
     pet_sp    = real(pet(i),kind(sp))
-print *,'Pressure',pa
-print *,day(i),month(i),year(i),precip_sp,tair_sp,lat,elev,raim(i)
-print *,tprev,cs
-print *,'melt!',mfmax,mfmin
+!print *,'Pressure',pa
+!print *,day(i),month(i),year(i),precip_sp,tair_sp,lat,elev,raim(i)
+!print *,tprev,cs
+!print *,'melt!',mfmax,mfmin
 !tair_sp = 10.0
     CALL EXSNOW19(int(dt),int(dt/sec_hour),day(i),month(i),year(i),&
 	!SNOW17 INPUT AND OUTPUT VARIABLES
@@ -238,7 +238,7 @@ print *,'melt!',mfmax,mfmin
 
 ! print *,'here 4'
 
-print *,'snow',snow(i),snowh(i)
+!print *,'snow',snow(i),snowh(i)
 
     call exsac(1,real(dt),raim(i),tair_sp,pet_sp,&
 	!SAC PARAMETERS
@@ -294,7 +294,7 @@ print *,'snow',snow(i),snowh(i)
 !enddo
 !print *,uh_state(1:10)
 
-  if(restart_run) then
+  if(restart_run .gt. 0) then
   !!!!!
   !add prior UH state to routed flow array...
       
@@ -322,21 +322,22 @@ print *,'snow',snow(i),snowh(i)
 
   !write out
   !print header first
-  write(unit=45,*) 'year month day hour swe pcp pcp*scf raim et pet tair uztwc uzfwc lztwc lzfsc lzfpc adimc mod_flow_unrouted mod_flow_routed obs_flow'
+  write(45,*) 'year month day hour swe pcp pcp*scf raim et pet tair uztwc uzfwc lztwc lzfsc lzfpc adimc ,&
+               mod_flow_unrouted mod_flow_routed obs_flow'
   do i = 1,sim_length
     if(unit_shape .gt. 0) then
-      write(unit=45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
+      write(45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
                         eta(i),pet(i),tair(i),uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),&
                         adimc_dp(i),tci(i),route_tci(i),streamflow(i)
     else
-      write(unit=45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
+      write(45,31) year(i),month(i),day(i),hour(i)+12,sneqv(i)*1000.,precip(i),precip(i)*scf,raim(i),&
                         eta(i),pet(i),tair(i),uztwc_dp(i),uzfwc_dp(i),lztwc_dp(i),lzfsc_dp(i),lzfpc_dp(i),&
                         adimc_dp(i),tci(i),route_tci(i),streamflow(i)
     endif
   enddo
   close(unit=45)
 
-  if(write_restart) then
+  if(write_restart .gt. 0) then
 
     !need to write out a snow17 state file for carryover variables and tprev
     call write_snow17_state(cs,tprev)

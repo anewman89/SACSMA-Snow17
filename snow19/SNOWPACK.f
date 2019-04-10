@@ -40,7 +40,8 @@ C
       DSC=1.
       IF(WX.GT.1E-2) THEN
         B=DTS*C1*EXP(0.08*TSNOW-C2*DS)
-        DSC=(DEXP(B*WX)-1.)/(B*WX)
+C   AJN - updated code to promote B*WX to double precision
+        DSC=(DEXP(dble(B*WX))-1.)/dble((B*WX))
       ENDIF
 
 C **  CALCULATE THE DENSITY CHANGE AS A RESULT OF SNOW METAMORPHISM

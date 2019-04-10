@@ -425,7 +425,7 @@ subroutine read_sac_params(param_name)
   implicit none
  
 !input variables
-  character(:),intent(in)	:: param_name
+  character(len=1024),intent(in)	:: param_name
  
 !local variables
   character(len=50)		:: param
@@ -487,7 +487,7 @@ subroutine read_snow17_params(param_name)
   implicit none
  
 !input variables
-  character(:),intent(in)	:: param_name
+  character(len=1024),intent(in)	:: param_name
 
 !local variables
   character(len=50)		:: param
@@ -561,7 +561,7 @@ subroutine read_uhp_params(param_name)
   implicit none
  
 !input variables
-  character(:),intent(in)	:: param_name
+  character(len=1024),intent(in)	:: param_name
 
 !local variables
   character(len=50)		:: param

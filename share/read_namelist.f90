@@ -4,7 +4,7 @@ subroutine read_namelist(namelist_name)
 
   implicit none
 !input variable
-  character(:),intent(in)	:: namelist_name
+  character(len=2000),intent(in)	:: namelist_name
 
 !local variables
   integer(I4B) :: ierr

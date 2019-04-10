@@ -32,8 +32,6 @@ share_dir  = $(F_MASTER_DIR)/share
 # share utilities
 calib_UTIL= \
 		nrtype.f90 \
-		nrutil.f90 \
-		nr.f90 \
 		constants.f90 \
 		snow17_sac.f90 \
 		gauge_calib.f90 \
@@ -80,9 +78,10 @@ calib_pgf77 = $(sac_77)
 #========================================================================
 
 # Define the Fortran Compilers
-FC  = pgf90
-FC77 = pgf77
-#FC  = ifort
+#FC  = pgf90
+#FC77 = pgf77
+FC  = gfortran
+FC77 = gfortran
 
 # Define the libraries and path to include files
 ifeq "$(FC)" "pgf90"
@@ -105,7 +104,7 @@ calib_DRIVER= \
 DRIVER = $(patsubst %, $(DRIVER_DIR)/%, $(calib_DRIVER))
 
 # Define the executable
-DRIVER__EX = lump_model.exe
+DRIVER__EX = lump_model_gfortran.exe
 
 
 #========================================================================
@@ -114,10 +113,16 @@ DRIVER__EX = lump_model.exe
 
 # Define flags
 ifeq "$(FC)" "gfortran"
- FLAGS = -static -Wall -g -ffree-line-length-none
+ FLAGS_DEBUG = -static -Wall -g -ffree-line-length-none
+ FLAGS = -O3 -fdefault-real-8 -fno-align-commons -ffree-line-length-none
+ FLAGS2 = -O3 -fdefault-real-8 -fno-align-commons -ffree-line-length-none
+# FLAGS = -fno-align-commons
+# FLAGS2 = -fno-align-commons
 endif
 ifeq "$(FC)" "ifort"
- FLAGS = -static -debug -warn all -check all -FR -O0 -auto -WB -traceback -g -fltconsistency -fpe0
+ FLAGS_PROF = -static -debug -warn all -check all -FR -O0 -auto -WB -traceback -g -fltconsistency -fpe0
+ FLAGS = -O3
+ FLAGS2 = -O3
 endif
 
 ifeq "$(FC)" "pgf90"
@@ -128,6 +133,10 @@ ifeq "$(FC)" "pgf90"
 endif
 ifeq "$(FC77)" "pgf77"
  FLAGS77 = -O3 -r8
+endif
+ifeq "$(FC77)" "gfortran"
+ FLAGS77 = -O3 -fdefault-real-8 -fno-align-commons
+# FLAGS77 = -fno-align-commons
 endif
 
 #FLAGS = -O3 -W -v
